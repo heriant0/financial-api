@@ -1,0 +1,4 @@
+p, admin, categories, create
+p, admin, categories, delete
+p, admin, categories, update
+g, budi, admin

@@ -1,0 +1,50 @@
+version: '3.1'
+services:
+  db:
+    image: postgres:15.2
+    ports:
+      - 5435:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=db_financial
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  # lint:
+  #   image: golangci/golangci-lint
+  #   profiles: ["tools"]
+  #   volumes:
+  #     - .:/app
+  #   working_dir: /app
+  migrate:
+    image: migrate/migrate:v4.15.2
+    profiles: ["tools"]
+    volumes:
+      - ./db/migrations:/migrations
+    entrypoint: 
+      [
+        "migrate",
+        "-path",
+        "/migrations",
+        "-database", "postgres://postgres:postgres@db:5432/db_financial?sslmode=disable"
+      ]
+    command: ["up"]
+    depends_on:
+      db:
+        condition: service_healthy
+  swagger:
+    image: swaggerapi/swagger-ui
+    ports: 
+      - 8004:8080
+    volumes:
+      - ./docs:/docs
+    environment:
+      - SWAGGER_JSON=/docs/api.yaml
+      - BASE_URL=/swagger
+volumes:
+  postgres_data:
