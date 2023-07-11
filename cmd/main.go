@@ -100,7 +100,7 @@ func main() {
 		authRoutes.POST("/logout", middlewares.AuthenticationMiddleware(tokenMaker), sessionController.Logout)
 	}
 
-	// r.Use(middlewares.AuthenticationMiddleware(tokenMaker))
+	r.Use(middlewares.AuthenticationMiddleware(tokenMaker))
 	v1Routes := r.Group("api/v1")
 	{
 

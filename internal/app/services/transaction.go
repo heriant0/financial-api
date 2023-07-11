@@ -12,7 +12,7 @@ import (
 
 type TransactionRepository interface {
 	Save(data models.Transaction) error
-	GetList() ([]models.Transaction, error)
+	GetList(filter string) ([]models.Transaction, error)
 	GetListByType(tsType string) ([]models.Transaction, error)
 }
 
@@ -50,10 +50,10 @@ func (s *TransactionService) Create(req schemas.TransactionCreateRequest) error 
 	return nil
 }
 
-func (s *TransactionService) GetList() ([]schemas.TransactionResponse, error) {
+func (s *TransactionService) GetList(filter string) ([]schemas.TransactionResponse, error) {
 	var transactions []schemas.TransactionResponse
 
-	data, err := s.repository.GetList()
+	data, err := s.repository.GetList(filter)
 	if err != nil {
 		log.Error(fmt.Errorf("error TransactionService - GetList :%w", err))
 		return nil, err

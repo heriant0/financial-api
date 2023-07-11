@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/heriant0/financial-api/internal/app/schemas"
+	"github.com/heriant0/financial-api/internal/pkg/handler"
 )
 
 type CurrencyService interface {
@@ -27,29 +28,31 @@ func NewCurrencyController(service CurrencyService) *CurrencyController {
 func (c *CurrencyController) GetList(ctx *gin.Context) {
 	response, err := c.currencyService.GetList()
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": response})
+	handler.ResponseSuccess(ctx, http.StatusOK, "", response)
 }
 
 func (c *CurrencyController) GetByID(ctx *gin.Context) {
 	currencyIdStr := ctx.Param("id")
 	currencyId, err := strconv.Atoi(currencyIdStr)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed get data currency"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "failed conver currency id")
+		return
 	}
 
 	req := schemas.CurrencyDetailRequest{ID: currencyId}
 	response, err := c.currencyService.GetByID(req)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed get data detail"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "failed get data detail")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": response})
+	handler.ResponseSuccess(ctx, http.StatusOK, "", response)
+
 }
 
 func (c *CurrencyController) Create(ctx *gin.Context) {
@@ -57,7 +60,7 @@ func (c *CurrencyController) Create(ctx *gin.Context) {
 
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
@@ -67,7 +70,8 @@ func (c *CurrencyController) Create(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"message": "success create currency"})
+	handler.ResponseSuccess(ctx, http.StatusOK, "success create currency", nil)
+
 }
 
 func (c *CurrencyController) Update(ctx *gin.Context) {
@@ -75,14 +79,15 @@ func (c *CurrencyController) Update(ctx *gin.Context) {
 	currencyId, err := strconv.Atoi(currencyIdStr)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed convert id currency"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "failed convert id currency")
+		return
 	}
 
 	req := schemas.CurrencyUpdateRequest{}
 	err = ctx.ShouldBindJSON(&req)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed update data currency"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "failed update data currency")
 		return
 	}
 
@@ -90,12 +95,11 @@ func (c *CurrencyController) Update(ctx *gin.Context) {
 
 	err = c.currencyService.Update(req)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed update data currency"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "failed update data currency")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": "data has been updated"})
-
+	handler.ResponseSuccess(ctx, http.StatusOK, "data has been updated", nil)
 }
 
 func (c *CurrencyController) Delete(ctx *gin.Context) {
@@ -103,17 +107,16 @@ func (c *CurrencyController) Delete(ctx *gin.Context) {
 	currencyId, err := strconv.Atoi(currencyIdStr)
 
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed convert id currency"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "ailed convert id currency")
 		return
 	}
 
 	req := schemas.CurrencyDeleteRequest{ID: currencyId}
 	err = c.currencyService.DeleteByID(req)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed delete data currency"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "ailed convert id currency")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": "data has been deleted"})
-
+	handler.ResponseSuccess(ctx, http.StatusOK, "ata has been deleted", nil)
 }

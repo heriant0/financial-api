@@ -2,14 +2,16 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/heriant0/financial-api/internal/app/schemas"
+	"github.com/heriant0/financial-api/internal/pkg/handler"
 )
 
 type TransactionService interface {
 	Create(req schemas.TransactionCreateRequest) error
-	GetList() ([]schemas.TransactionResponse, error)
+	GetList(filter string) ([]schemas.TransactionResponse, error)
 	GetListByType(types string) ([]schemas.TransactionResponse, error)
 }
 
@@ -22,30 +24,39 @@ func NewTransactionController(transactionService TransactionService) *Transactio
 }
 
 func (c *TransactionController) Create(ctx *gin.Context) {
-	var req schemas.TransactionCreateRequest
-	err := ctx.ShouldBindJSON(&req)
+	// Get user id
+	userIdstr := ctx.GetString("user_id")
+	userId, err := strconv.Atoi(userIdstr)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed create transaction"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, err.Error())
+	}
+
+	var request schemas.TransactionCreateRequest
+	err = ctx.ShouldBindJSON(&request)
+	if err != nil {
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "failed create transaction")
 		return
 	}
 
-	err = c.service.Create(req)
+	request.UserId = userId
+	err = c.service.Create(request)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed create transaction"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "failed create transaction")
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"message": "data has been saved"})
+	handler.ResponseSuccess(ctx, http.StatusCreated, "data has been saved", nil)
 }
 
 func (c *TransactionController) GetList(ctx *gin.Context) {
-	response, err := c.service.GetList()
+	filter := ctx.Query("type")
+	response, err := c.service.GetList(filter)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": response})
+	handler.ResponseSuccess(ctx, http.StatusOK, "Successfully get data  transaction", response)
 
 }
 

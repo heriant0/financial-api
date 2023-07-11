@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/heriant0/financial-api/internal/pkg/handler"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,7 +18,7 @@ func AuthenticationMiddleware(tokenMaker AccessTokenVerifier) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		accessToken := tokenFromHeader(ctx)
 		if accessToken == "" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized access"})
+			handler.ResponError(ctx, http.StatusUnauthorized, "Unauthorized access")
 			ctx.Abort()
 			return
 		}
@@ -26,7 +27,7 @@ func AuthenticationMiddleware(tokenMaker AccessTokenVerifier) gin.HandlerFunc {
 		sub, err := tokenMaker.VerifyAccessToken(accessToken)
 		if err != nil {
 			log.Error(fmt.Errorf("error verify access token %w", err))
-			ctx.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized access"})
+			handler.ResponError(ctx, http.StatusUnauthorized, "Unauthorized access")
 			ctx.Abort()
 			return
 		}

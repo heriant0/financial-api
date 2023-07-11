@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/heriant0/financial-api/internal/app/schemas"
+	"github.com/heriant0/financial-api/internal/pkg/handler"
 )
 
 type RegisterService interface {
@@ -25,32 +26,34 @@ func (c *RegistrationController) Register(ctx *gin.Context) {
 	req := &schemas.RegisterRequest{}
 	err := ctx.ShouldBindJSON(&req)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error()})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
 	err = c.registerService.Register(req)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": err.Error()})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "register successfully"})
-
+	handler.ResponseSuccess(ctx, http.StatusOK, "register successfully", nil)
 }
 
 func (c *RegistrationController) UserProfile(ctx *gin.Context) {
-	userIdStr := ctx.Param("id")
+	// userIdStr := ctx.Param("id")
+	userIdStr := ctx.GetString("user_id")
 	userId, err := strconv.Atoi(userIdStr)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed get profile user"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "failed get profile user")
+		return
 	}
 
 	req := schemas.UserProfileRequest{ID: userId}
-	res, err := c.registerService.GetProfileUser(req)
+	response, err := c.registerService.GetProfileUser(req)
 	if err != nil {
-		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed get profile user"})
+		handler.ResponError(ctx, http.StatusUnprocessableEntity, "failed get profile user")
+		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": res})
+	handler.ResponseSuccess(ctx, http.StatusOK, "", response)
 }

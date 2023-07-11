@@ -33,7 +33,7 @@ func (r *TransactionRepository) Save(data models.Transaction) error {
 	return nil
 }
 
-func (r *TransactionRepository) GetList() ([]models.Transaction, error) {
+func (r *TransactionRepository) GetList(filter string) ([]models.Transaction, error) {
 	var (
 		transactions []models.Transaction
 		sqlStatement = `
@@ -51,7 +51,17 @@ func (r *TransactionRepository) GetList() ([]models.Transaction, error) {
 		`
 	)
 
-	rows, err := r.DB.Queryx(sqlStatement)
+	var rows *sqlx.Rows
+	var err error
+	
+	if filter != "" {
+		sqlStatement = sqlStatement + "WHERE t.transaction_type = $1"
+		rows, err = r.DB.Queryx(sqlStatement, filter)
+	} else {
+		rows, err = r.DB.Queryx(sqlStatement)
+	}
+
+	// rows, err := r.DB.Queryx(sqlStatement)
 	if err != nil {
 		log.Error(fmt.Errorf("error TransactionRepository - GetList :%w", err))
 		return transactions, err
